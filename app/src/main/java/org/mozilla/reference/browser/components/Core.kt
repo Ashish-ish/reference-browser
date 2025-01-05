@@ -90,14 +90,7 @@ class Core(private val context: Context, crashReporter: CrashReporter) {
     /**
      * The [Client] implementation (`concept-fetch`) used for HTTP requests.
      */
-//    val client: Client by lazy {
-//        EngineProvider.createClient(context)
-//    }
-
     val client: Client by lazy {
-        CoroutineScope(Dispatchers.IO).launch {
-            EngineProvider.createClient(context)
-        }
         EngineProvider.createClient(context)
     }
 
