@@ -30,10 +30,10 @@ import org.mozilla.reference.browser.tabs.TabsTrayFragment
  * Fragment used for browsing the web within the main app.
  */
 class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
-    private val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
-    private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
-    private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
-    private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
+    private val thumbnailsFeature by lazy { ViewBoundFeatureWrapper<BrowserThumbnails>() }
+    private val readerViewFeature by lazy { ViewBoundFeatureWrapper<ReaderViewIntegration>() }
+    private val webExtToolbarFeature by lazy { ViewBoundFeatureWrapper<WebExtensionToolbarFeature>() }
+    private val windowFeature by lazy { ViewBoundFeatureWrapper<WindowFeature>() }
 
     private val awesomeBar: AwesomeBarWrapper
         get() = requireView().findViewById(R.id.awesomeBar)
