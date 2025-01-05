@@ -63,24 +63,24 @@ import mozilla.components.ui.widgets.behavior.ViewPosition as MozacToolbarBehavi
  * UI code specific to the app or to custom tabs can be found in the subclasses.
  */
 abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, ActivityResultHandler {
-    private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
-    private val toolbarIntegration = ViewBoundFeatureWrapper<ToolbarIntegration>()
-    private val contextMenuIntegration = ViewBoundFeatureWrapper<ContextMenuIntegration>()
-    private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
-    private val shareDownloadsFeature = ViewBoundFeatureWrapper<ShareDownloadFeature>()
-    private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
-    private val promptsFeature = ViewBoundFeatureWrapper<PromptFeature>()
-    private val webExtensionPromptFeature = ViewBoundFeatureWrapper<WebExtensionPromptFeature>()
-    private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
-    private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
-    private val sitePermissionFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
-    private val pictureInPictureIntegration = ViewBoundFeatureWrapper<PictureInPictureIntegration>()
-    private val swipeRefreshFeature = ViewBoundFeatureWrapper<SwipeRefreshFeature>()
-    private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
-    private val webAuthnFeature = ViewBoundFeatureWrapper<WebAuthnFeature>()
-    private val fullScreenMediaSessionFeature = ViewBoundFeatureWrapper<MediaSessionFullscreenFeature>()
-    private val lastTabFeature = ViewBoundFeatureWrapper<LastTabFeature>()
-    private val screenOrientationFeature = ViewBoundFeatureWrapper<ScreenOrientationFeature>()
+    private val sessionFeature by lazy { ViewBoundFeatureWrapper<SessionFeature>() }
+    private val toolbarIntegration by lazy { ViewBoundFeatureWrapper<ToolbarIntegration>() }
+    private val contextMenuIntegration by lazy { ViewBoundFeatureWrapper<ContextMenuIntegration>() }
+    private val downloadsFeature by lazy { ViewBoundFeatureWrapper<DownloadsFeature>() }
+    private val shareDownloadsFeature by lazy { ViewBoundFeatureWrapper<ShareDownloadFeature>() }
+    private val appLinksFeature by lazy { ViewBoundFeatureWrapper<AppLinksFeature>() }
+    private val promptsFeature by lazy { ViewBoundFeatureWrapper<PromptFeature>() }
+    private val webExtensionPromptFeature by lazy { ViewBoundFeatureWrapper<WebExtensionPromptFeature>() }
+    private val fullScreenFeature by lazy { ViewBoundFeatureWrapper<FullScreenFeature>() }
+    private val findInPageIntegration by lazy { ViewBoundFeatureWrapper<FindInPageIntegration>() }
+    private val sitePermissionFeature by lazy { ViewBoundFeatureWrapper<SitePermissionsFeature>() }
+    private val pictureInPictureIntegration by lazy { ViewBoundFeatureWrapper<PictureInPictureIntegration>() }
+    private val swipeRefreshFeature by lazy { ViewBoundFeatureWrapper<SwipeRefreshFeature>() }
+    private val windowFeature by lazy { ViewBoundFeatureWrapper<WindowFeature>() }
+    private val webAuthnFeature by lazy { ViewBoundFeatureWrapper<WebAuthnFeature>() }
+    private val fullScreenMediaSessionFeature by lazy { ViewBoundFeatureWrapper<MediaSessionFullscreenFeature>() }
+    private val lastTabFeature by lazy { ViewBoundFeatureWrapper<LastTabFeature>() }
+    private val screenOrientationFeature by lazy { ViewBoundFeatureWrapper<ScreenOrientationFeature>() }
 
     private val engineView: EngineView
         get() = requireView().findViewById<View>(R.id.engineView) as EngineView
@@ -91,19 +91,23 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
     private val swipeRefresh: SwipeRefreshLayout
         get() = requireView().findViewById(R.id.swipeRefresh)
 
-    private val backButtonHandler: List<ViewBoundFeatureWrapper<*>> = listOf(
-        fullScreenFeature,
-        findInPageIntegration,
-        toolbarIntegration,
+    private val backButtonHandler: List<ViewBoundFeatureWrapper<*>> by lazy {
+        listOf(
+            fullScreenFeature,
+            findInPageIntegration,
+            toolbarIntegration,
 
-        sessionFeature,
-        lastTabFeature,
-    )
+            sessionFeature,
+            lastTabFeature,
+        )
+    }
 
-    private val activityResultHandler: List<ViewBoundFeatureWrapper<*>> = listOf(
-        webAuthnFeature,
-        promptsFeature,
-    )
+    private val activityResultHandler: List<ViewBoundFeatureWrapper<*>> by lazy {
+        listOf(
+            webAuthnFeature,
+            promptsFeature,
+        )
+    }
 
     protected val sessionId: String?
         get() = arguments?.getString(SESSION_ID)

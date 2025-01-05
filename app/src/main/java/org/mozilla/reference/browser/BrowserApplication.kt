@@ -31,7 +31,6 @@ open class BrowserApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
         setupCrashReporting(this)
 
         RustHttpConfig.setClient(lazy { components.core.client })
@@ -71,16 +70,19 @@ open class BrowserApplication : Application() {
                 components.useCases.tabsUseCases.selectTab(sessionId)
             },
             onExtensionsLoaded = { extensions ->
-                components.core.addonUpdater.registerForFutureUpdates(extensions)
+                @OptIn(DelicateCoroutinesApi::class)
+                GlobalScope.launch(Dispatchers.IO) {
+                    components.core.addonUpdater.registerForFutureUpdates(extensions)
 
-                val checker = components.core.supportedAddonsChecker
-                val hasUnsupportedAddons = extensions.any { it.isUnsupported() }
-                if (hasUnsupportedAddons) {
-                    checker.registerForChecks()
-                } else {
-                    // As checks are a persistent subscriptions, we have to make sure
-                    // we remove any previous subscriptions.
-                    checker.unregisterForChecks()
+                    val checker = components.core.supportedAddonsChecker
+                    val hasUnsupportedAddons = extensions.any { it.isUnsupported() }
+                    if (hasUnsupportedAddons) {
+                        checker.registerForChecks()
+                    } else {
+                        // As checks are a persistent subscriptions, we have to make sure
+                        // we remove any previous subscriptions.
+                        checker.unregisterForChecks()
+                    }
                 }
             },
             onUpdatePermissionRequest = components.core.addonUpdater::onUpdatePermissionRequest,
@@ -89,16 +91,22 @@ open class BrowserApplication : Application() {
         components.push.feature?.let {
             Logger.info("AutoPushFeature is configured, initializing it...")
 
-            PushProcessor.install(it)
-
             // WebPush integration to observe and deliver push messages to engine.
             WebPushEngineIntegration(components.core.engine, it).start()
 
-            // Perform a one-time initialization of the account manager if a message is received.
-            PushFxaIntegration(it, lazy { components.backgroundServices.accountManager }).launch()
+            @OptIn(DelicateCoroutinesApi::class)
+            GlobalScope.launch(Dispatchers.IO) {
 
-            // Initialize the push feature and service.
-            it.initialize()
+                PushProcessor.install(it)
+
+                // Perform a one-time initialization of the account manager if a message is received.
+                PushFxaIntegration(
+                    it,
+                    lazy { components.backgroundServices.accountManager }).launch()
+
+                // Initialize the push feature and service.
+                it.initialize()
+            }
         }
         @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(Dispatchers.IO) {
@@ -140,11 +148,15 @@ private fun setupLogging() {
     RustLog.enable()
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 private fun setupCrashReporting(application: BrowserApplication) {
-    if (isCrashReportActive) {
-        application
-            .components
-            .analytics
-            .crashReporter.install(application)
+    GlobalScope.launch(Dispatchers.IO) {
+        if (isCrashReportActive) {
+            application
+                .components
+                .analytics
+                .crashReporter.install(application)
+        }
     }
 }
+
