@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.push.PushProcessor
@@ -34,12 +35,15 @@ class InitializationProvider : ContentProvider() {
         RustLog.enable()
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun setupPushIntegration(components: Components) {
         components.push.feature?.let {
             PushProcessor.install(it)
             WebPushEngineIntegration(components.core.engine, it).start()
-            PushFxaIntegration(it, lazy { components.backgroundServices.accountManager }).launch()
-            it.initialize()
+            GlobalScope.launch(Dispatchers.IO) {
+                PushFxaIntegration(it, lazy { components.backgroundServices.accountManager }).launch()
+                it.initialize()
+            }
         }
     }
 

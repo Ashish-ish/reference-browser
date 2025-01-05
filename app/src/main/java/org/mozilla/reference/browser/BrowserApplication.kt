@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit
 open class BrowserApplication : Application() {
     val components by lazy { Components(this) }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
         setupCrashReporting(this)
@@ -36,10 +37,13 @@ open class BrowserApplication : Application() {
         components.core.engine.warmUp()
         restoreBrowserState()
 
-        GlobalAddonDependencyProvider.initialize(
-            components.core.addonManager,
-            components.core.addonUpdater,
-        )
+        GlobalScope.launch(Dispatchers.IO) {
+            GlobalAddonDependencyProvider.initialize(
+                components.core.addonManager,
+                components.core.addonUpdater,
+            )
+        }
+
         WebExtensionSupport.initialize(
             runtime = components.core.engine,
             store = components.core.store,

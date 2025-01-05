@@ -71,7 +71,7 @@ class Components(private val context: Context) {
         )
     }
 
-    private val notificationManagerCompat = NotificationManagerCompat.from(context)
+    private val notificationManagerCompat by lazy { NotificationManagerCompat.from(context) }
 
     val notificationsDelegate: NotificationsDelegate by lazy {
         NotificationsDelegate(
