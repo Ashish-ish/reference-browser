@@ -2,6 +2,7 @@ package org.mozilla.reference.browser.components
 
 import android.util.Log
 
+// Add this to test the before and after of page, cold start, loading time
 class PerformanceMonitor {
     private var pageLoadStart: Long = 0
 

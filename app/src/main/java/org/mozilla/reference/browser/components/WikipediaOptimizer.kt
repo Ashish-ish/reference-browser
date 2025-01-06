@@ -41,8 +41,7 @@ class WikipediaOptimizer {
                     try {
                         preloadResource(url)
                         preloadedResources.add(url)
-                    } catch (e: Exception) {
-                    }
+                    } catch (e: Exception) { }
                 }
             }
             startPreloading()
