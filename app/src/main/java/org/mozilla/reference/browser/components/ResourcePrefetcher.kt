@@ -21,7 +21,6 @@ class ResourcePrefetcher {
 
     private fun prefetchDNS() {
         scope.launch {
-            // Prefetch DNS for Wikipedia domains
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 cm.getNetworkCapabilities(cm.activeNetwork)?.let { capabilities ->
@@ -38,8 +37,6 @@ class ResourcePrefetcher {
     private fun prefetchHost(host: String) {
         try {
             InetAddress.getAllByName(host)
-        } catch (e: Exception) {
-            // Handle DNS lookup failure
-        }
+        } catch (e: Exception) { }
     }
 }

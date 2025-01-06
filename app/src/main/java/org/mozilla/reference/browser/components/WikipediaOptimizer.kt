@@ -45,11 +45,11 @@ class WikipediaOptimizer {
                     }
                 }
             }
+            startPreloading()
         }
     }
 
     private suspend fun preloadResource(url: String) = withContext(Dispatchers.IO) {
-        // Check if already cached
         if (cache.get(url) != null) return@withContext
 
         try {
@@ -91,7 +91,6 @@ class WikipediaOptimizer {
     private val _preloadProgress = MutableStateFlow(0f)
     val preloadProgress: StateFlow<Float> = _preloadProgress.asStateFlow()
 
-    // Method to start preloading with progress tracking
     fun startPreloading() {
         coroutineScope.launch {
             val totalResources = commonResources.size
