@@ -42,6 +42,7 @@ import org.mozilla.reference.browser.ext.components
 import org.mozilla.reference.browser.ext.share
 import org.mozilla.reference.browser.settings.SettingsActivity
 import org.mozilla.reference.browser.tabs.synced.SyncedTabsActivity
+import java.lang.ref.WeakReference
 
 @Suppress("LongParameterList")
 class ToolbarIntegration(
@@ -207,7 +208,7 @@ class ToolbarIntegration(
         }
     }
 
-    private val toolbarFeature: ToolbarFeature = ToolbarFeature(
+    private val toolbarFeature: WeakReference<ToolbarFeature> = WeakReference(ToolbarFeature(
         toolbar,
         context.components.core.store,
         context.components.useCases.sessionUseCases.loadUrl,
@@ -219,17 +220,17 @@ class ToolbarIntegration(
             )
         },
         sessionId,
-    )
+    ))
 
     override fun start() {
-        toolbarFeature.start()
+        toolbarFeature.get()?.start()
     }
 
     override fun stop() {
-        toolbarFeature.stop()
+        toolbarFeature.get()?.stop()
     }
 
     override fun onBackPressed(): Boolean {
-        return toolbarFeature.onBackPressed()
+        return toolbarFeature.get()?.onBackPressed() ?: false
     }
 }

@@ -15,6 +15,7 @@ import org.mozilla.reference.browser.autofill.AutofillUnlockActivity
 import org.mozilla.reference.browser.components.Analytics
 import org.mozilla.reference.browser.components.BackgroundServices
 import org.mozilla.reference.browser.components.Core
+import org.mozilla.reference.browser.components.DiskCache
 import org.mozilla.reference.browser.components.Push
 import org.mozilla.reference.browser.components.Services
 import org.mozilla.reference.browser.components.UseCases
@@ -71,11 +72,19 @@ class Components(private val context: Context) {
         )
     }
 
-    private val notificationManagerCompat = NotificationManagerCompat.from(context)
+    private val notificationManagerCompat by lazy { NotificationManagerCompat.from(context) }
 
     val notificationsDelegate: NotificationsDelegate by lazy {
         NotificationsDelegate(
             notificationManagerCompat,
         )
+    }
+
+
+    val diskCache: DiskCache by lazy {
+        DiskCache.Builder()
+            .setBaseDirectory(context.cacheDir)
+            .setMaxCacheSize(50 * 1024 * 1024L)
+            .build()
     }
 }

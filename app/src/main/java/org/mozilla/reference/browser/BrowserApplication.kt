@@ -11,48 +11,39 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.concept.engine.webextension.isUnsupported
-import mozilla.components.concept.push.PushProcessor
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.support.base.log.Log
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.ktx.android.content.runOnlyInMainProcess
-import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import mozilla.components.support.webextensions.WebExtensionSupport
 import org.mozilla.reference.browser.ext.isCrashReportActive
-import org.mozilla.reference.browser.push.PushFxaIntegration
-import org.mozilla.reference.browser.push.WebPushEngineIntegration
 import java.util.concurrent.TimeUnit
 
 open class BrowserApplication : Application() {
     val components by lazy { Components(this) }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
-
         setupCrashReporting(this)
-
-        RustHttpConfig.setClient(lazy { components.core.client })
         setupLogging()
 
         if (!isMainProcess()) {
-            // If this is not the main process then do not continue with the initialization here. Everything that
-            // follows only needs to be done in our app's main process and should not be done in other processes like
-            // a GeckoView child process or the crash handling process. Most importantly we never want to end up in a
-            // situation where we create a GeckoRuntime from the Gecko child process (
             return
         }
 
         components.core.engine.warmUp()
-
         restoreBrowserState()
 
-        GlobalAddonDependencyProvider.initialize(
-            components.core.addonManager,
-            components.core.addonUpdater,
-        )
+        GlobalScope.launch(Dispatchers.IO) {
+            GlobalAddonDependencyProvider.initialize(
+                components.core.addonManager,
+                components.core.addonUpdater,
+            )
+        }
+
         WebExtensionSupport.initialize(
             runtime = components.core.engine,
             store = components.core.store,
@@ -74,36 +65,14 @@ open class BrowserApplication : Application() {
                 components.core.addonUpdater.registerForFutureUpdates(extensions)
 
                 val checker = components.core.supportedAddonsChecker
-                val hasUnsupportedAddons = extensions.any { it.isUnsupported() }
-                if (hasUnsupportedAddons) {
+                if (extensions.any { it.isUnsupported() }) {
                     checker.registerForChecks()
                 } else {
-                    // As checks are a persistent subscriptions, we have to make sure
-                    // we remove any previous subscriptions.
                     checker.unregisterForChecks()
                 }
             },
             onUpdatePermissionRequest = components.core.addonUpdater::onUpdatePermissionRequest,
         )
-
-        components.push.feature?.let {
-            Logger.info("AutoPushFeature is configured, initializing it...")
-
-            PushProcessor.install(it)
-
-            // WebPush integration to observe and deliver push messages to engine.
-            WebPushEngineIntegration(components.core.engine, it).start()
-
-            // Perform a one-time initialization of the account manager if a message is received.
-            PushFxaIntegration(it, lazy { components.backgroundServices.accountManager }).launch()
-
-            // Initialize the push feature and service.
-            it.initialize()
-        }
-        @OptIn(DelicateCoroutinesApi::class)
-        GlobalScope.launch(Dispatchers.IO) {
-            components.core.fileUploadsDirCleaner.cleanUploadsDirectory()
-        }
     }
 
     override fun onTrimMemory(level: Int) {
@@ -140,11 +109,15 @@ private fun setupLogging() {
     RustLog.enable()
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 private fun setupCrashReporting(application: BrowserApplication) {
-    if (isCrashReportActive) {
-        application
-            .components
-            .analytics
-            .crashReporter.install(application)
+    GlobalScope.launch(Dispatchers.IO) {
+        if (isCrashReportActive) {
+            application
+                .components
+                .analytics
+                .crashReporter.install(application)
+        }
     }
 }
+

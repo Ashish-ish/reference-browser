@@ -57,12 +57,14 @@ class ReaderViewIntegration(
         readerViewAppearanceButton.setOnClickListener { feature.showControls() }
     }
 
-    private val feature = ReaderViewFeature(context, engine, store, view) { available, active ->
-        readerViewButtonVisible = available
-        readerViewButton.setSelected(active)
+    private val feature by lazy {
+        ReaderViewFeature(context, engine, store, view) { available, active ->
+            readerViewButtonVisible = available
+            readerViewButton.setSelected(active)
 
-        if (active) readerViewAppearanceButton.show() else readerViewAppearanceButton.hide()
-        toolbar.invalidateActions()
+            if (active) readerViewAppearanceButton.show() else readerViewAppearanceButton.hide()
+            toolbar.invalidateActions()
+        }
     }
 
     override fun start() {

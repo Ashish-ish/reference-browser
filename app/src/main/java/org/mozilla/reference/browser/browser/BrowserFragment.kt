@@ -6,8 +6,11 @@ package org.mozilla.reference.browser.browser
 
 import android.os.Bundle
 import android.view.View
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.browser.thumbnails.BrowserThumbnails
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
@@ -21,6 +24,8 @@ import mozilla.components.feature.toolbar.WebExtensionToolbarFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.reference.browser.R
+import org.mozilla.reference.browser.components.ResourcePrefetcher
+import org.mozilla.reference.browser.components.WikipediaOptimizer
 import org.mozilla.reference.browser.ext.components
 import org.mozilla.reference.browser.ext.requireComponents
 import org.mozilla.reference.browser.search.AwesomeBarWrapper
@@ -30,10 +35,10 @@ import org.mozilla.reference.browser.tabs.TabsTrayFragment
  * Fragment used for browsing the web within the main app.
  */
 class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
-    private val thumbnailsFeature = ViewBoundFeatureWrapper<BrowserThumbnails>()
-    private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
-    private val webExtToolbarFeature = ViewBoundFeatureWrapper<WebExtensionToolbarFeature>()
-    private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
+    private val thumbnailsFeature by lazy { ViewBoundFeatureWrapper<BrowserThumbnails>() }
+    private val readerViewFeature by lazy { ViewBoundFeatureWrapper<ReaderViewIntegration>() }
+    private val webExtToolbarFeature by lazy { ViewBoundFeatureWrapper<WebExtensionToolbarFeature>() }
+    private val windowFeature by lazy { ViewBoundFeatureWrapper<WindowFeature>() }
 
     private val awesomeBar: AwesomeBarWrapper
         get() = requireView().findViewById(R.id.awesomeBar)
@@ -138,6 +143,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         )
 
         engineView.setDynamicToolbarMaxHeight(resources.getDimensionPixelSize(R.dimen.browser_toolbar_height))
+
+        cacheWikipediaContent()
     }
 
     private fun showTabs() {
@@ -148,6 +155,16 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             commit()
         }
     }
+
+    private fun cacheWikipediaContent() {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            context?.let {
+                ResourcePrefetcher().initialize(it)
+                WikipediaOptimizer().initialize(it.components.diskCache)
+            }
+        }
+    }
+
 
     override fun onBackPressed(): Boolean =
         readerViewFeature.onBackPressed() || super.onBackPressed()

@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
 import org.mozilla.reference.browser.ext.components
 import org.mozilla.reference.browser.tabs.PrivatePage
+import java.nio.charset.Charset
 
 /**
  * NB, and FIXME: this class is consumed by a 'Core' component group, but itself relies on 'firefoxAccountsFeature'
@@ -32,6 +33,17 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         isDirectNavigation: Boolean,
         isSubframeRequest: Boolean,
     ): RequestInterceptor.InterceptionResponse? {
+        if (uri.contains("wikipedia.org")) {
+            // Check cache first
+            context.components.diskCache.get(uri)?.let { cachedData ->
+                val content = String(cachedData, Charset.forName("UTF-8"))
+                return RequestInterceptor.InterceptionResponse.Content(
+                    data = content,
+                    mimeType = guessMimeType(uri),
+                    encoding = "UTF-8"
+                )
+            }
+        }
         return when (uri) {
             "about:privatebrowsing" -> {
                 val page = PrivatePage.createPrivateBrowsingPage(context, uri)
@@ -80,4 +92,14 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
     }
 
     override fun interceptsAppInitiatedRequests() = true
+
+    private fun guessMimeType(uri: String): String {
+        return when {
+            uri.endsWith(".css") -> "text/css"
+            uri.endsWith(".js") -> "application/javascript"
+            uri.endsWith(".png") -> "image/png"
+            uri.endsWith(".jpg") -> "image/jpeg"
+            else -> "text/html"
+        }
+    }
 }
